@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Env files (secrets) — never commit real values
+.env
+.env.local
+.env*.local
+
+# Vercel
+.vercel/
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+
+# NOTE: .agent-logs/ is intentionally NOT ignored — it ships with the repo
+# per the 8x assignment's capture-setup requirement. Do not add it here.
