@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { sql } from "@/lib/db";
 import TrustChip from "@/components/TrustChip";
 import Link from "next/link";
@@ -17,12 +18,11 @@ interface Row {
 
 export default async function HistoryPage() {
   const { userId } = await auth();
-  const rows = userId
-    ? await sql<Row[]>`
-        select id, type, model_id, prompt, status, guardrail_verdict, output_url, is_preview_mode, created_at
-        from generations where clerk_user_id = ${userId} order by created_at desc limit 60
-      `
-    : [];
+  if (!userId) redirect("/sign-in?returnUrl=/history");
+  const rows = await sql<Row[]>`
+    select id, type, model_id, prompt, status, guardrail_verdict, output_url, is_preview_mode, created_at
+    from generations where clerk_user_id = ${userId} order by created_at desc limit 60
+  `;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">

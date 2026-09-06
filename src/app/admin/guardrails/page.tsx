@@ -1,3 +1,5 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { sql } from "@/lib/db";
 import TrustChip from "@/components/TrustChip";
 
@@ -13,6 +15,9 @@ interface EventRow {
 }
 
 export default async function AdminGuardrailsPage() {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in?returnUrl=/admin/guardrails");
+
   const events = await sql<EventRow[]>`
     select id, generation_id, stage, verdict, reasoning, model_used, latency_ms, created_at
     from guardrail_events order by created_at desc limit 100

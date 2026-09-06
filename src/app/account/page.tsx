@@ -1,11 +1,12 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { sql } from "@/lib/db";
 import { getBalance } from "@/lib/credits";
 import ManageBillingButton from "@/components/ManageBillingButton";
 
 export default async function AccountPage() {
   const { userId } = await auth();
-  if (!userId) return null;
+  if (!userId) redirect("/sign-in?returnUrl=/account");
   const user = await currentUser();
   const balance = await getBalance(userId);
   const [profile] = await sql<{ subscription_tier: string | null; subscription_status: string | null }[]>`
