@@ -12,9 +12,13 @@ export interface VideoModel {
   badge?: Badge;
   creditsPerSecond: number;
   approxTime: string;
-  /** Real generation is wired through Vercel AI Gateway; anything not
-   * reachable there runs the same pipeline in a clearly labeled preview mode. */
+  /** Real generation is wired through Vercel AI Gateway wherever a model is
+   * actually reachable there (checked against the live /v1/models catalog,
+   * not assumed); anything not reachable (Sora, Runway proper, legacy Veo 2)
+   * runs the same guardrails/credits/job pipeline in a clearly labeled
+   * preview mode instead of faking full-fidelity output. */
   live: boolean;
+  gatewayModelId?: string;
 }
 
 export interface ImageModel {
@@ -25,23 +29,24 @@ export interface ImageModel {
   credits: number;
   approxTime: string;
   live: boolean;
+  gatewayModelId?: string;
 }
 
 export const VIDEO_MODELS: VideoModel[] = [
   { id: "sora-standard", label: "Sora Standard", provider: "Sora", badge: "Popular", creditsPerSecond: 1.0, approxTime: "~2m", live: false },
   { id: "sora-pro", label: "Sora Pro", provider: "Sora", badge: "Premium", creditsPerSecond: 2.0, approxTime: "~3m", live: false },
   { id: "veo-2", label: "Veo 2", provider: "Veo", creditsPerSecond: 3.0, approxTime: "~45s", live: false },
-  { id: "veo-3-fast", label: "Veo 3 Fast", provider: "Veo", badge: "Fast", creditsPerSecond: 1.5, approxTime: "~35s", live: false },
-  { id: "veo-3", label: "Veo 3", provider: "Veo", badge: "New", creditsPerSecond: 3.0, approxTime: "~1m", live: false },
+  { id: "veo-3-fast", label: "Veo 3 Fast", provider: "Veo", badge: "Fast", creditsPerSecond: 1.5, approxTime: "~35s", live: true, gatewayModelId: "google/veo-3.1-fast-generate-001" },
+  { id: "veo-3", label: "Veo 3", provider: "Veo", badge: "New", creditsPerSecond: 3.0, approxTime: "~1m", live: true, gatewayModelId: "google/veo-3.1-generate-001" },
   { id: "gen4-turbo", label: "Gen-4 Turbo", provider: "Runway", badge: "Popular", creditsPerSecond: 1.0, approxTime: "~2m", live: false },
   { id: "gen4-5", label: "Gen-4.5", provider: "Runway", badge: "Premium", creditsPerSecond: 1.2, approxTime: "~2m", live: false },
   { id: "gen3-alpha-turbo", label: "Gen-3 Alpha Turbo", provider: "Runway", badge: "Fast", creditsPerSecond: 1.0, approxTime: "~1m", live: false },
 ];
 
 export const IMAGE_MODELS: ImageModel[] = [
-  { id: "gpt-image", label: "GPT Image", provider: "OpenAI", badge: "Premium", credits: 2, approxTime: "~10s", live: true },
-  { id: "nano-banana-2", label: "Nano Banana 2", provider: "Google", badge: "New", credits: 1, approxTime: "~8s", live: true },
-  { id: "nano-banana-2-4k", label: "Nano Banana 2 4K", provider: "Google", badge: "4K", credits: 2, approxTime: "~15s", live: true },
+  { id: "gpt-image", label: "GPT Image", provider: "OpenAI", badge: "Premium", credits: 2, approxTime: "~10s", live: true, gatewayModelId: "openai/gpt-image-1" },
+  { id: "nano-banana-2", label: "Nano Banana 2", provider: "Google", badge: "New", credits: 1, approxTime: "~8s", live: true, gatewayModelId: "google/gemini-3.1-flash-image" },
+  { id: "nano-banana-2-4k", label: "Nano Banana 2 4K", provider: "Google", badge: "4K", credits: 2, approxTime: "~15s", live: true, gatewayModelId: "google/gemini-3.1-flash-image" },
   { id: "gen4-image", label: "Gen-4 Image", provider: "Runway", badge: "New", credits: 1, approxTime: "~20s", live: false },
 ];
 
