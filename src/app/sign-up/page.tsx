@@ -80,6 +80,10 @@ export default function SignUpPage() {
                 className="mt-1.5 w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm outline-none ring-accent focus:ring-2"
                 placeholder="you@example.com"
               />
+              {/* Required by Clerk's bot sign-up protection, enabled by
+                  default -- without this element the CAPTCHA widget fails
+                  to initialize and signUp.create() hangs silently. */}
+              <div id="clerk-captcha" />
               {errors?.fields?.emailAddress && (
                 <p className="mt-1 text-xs text-danger">{errors.fields.emailAddress.message}</p>
               )}

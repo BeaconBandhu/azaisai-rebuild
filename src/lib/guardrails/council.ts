@@ -7,7 +7,16 @@ import { verdictSchema, MODERATION_SYSTEM_PROMPT, type Verdict } from "./schema"
 // path and billing account, not just a different model string through the
 // same proxy, so the two judges are architecturally independent the way
 // karpathy/llm-council's multi-provider panel is (see README for credit).
+//
+// Known infra constraint, found by testing (scripts/test-pipeline.mjs), not
+// assumed: this Vercel account is on the free AI Gateway tier, which
+// rate-limits (429) under any real load -- including, ironically, the exact
+// moderation call meant to review a genuinely unsafe prompt. Judge B's
+// direct-OpenAI path has its own dedicated quota and doesn't share that
+// limit, so it's the one call in this module we can actually rely on; judge
+// A and the chairman both retry through it before falling back further.
 const directOpenAI = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const hasDirectOpenAI = Boolean(process.env.OPENAI_API_KEY);
 
 export interface CouncilEntry {
   stage: "council_judge_a" | "council_judge_b" | "chairman";
@@ -21,20 +30,71 @@ export interface CouncilResult {
   entries: CouncilEntry[];
 }
 
-async function judge(model: string, prompt: string, useDirectOpenAI: boolean): Promise<{ verdict: Verdict; latencyMs: number }> {
+const SEVERITY: Record<Verdict["verdict"], number> = { pass: 0, flag: 1, block: 2 };
+function stricterOf(a: Verdict, b: Verdict): Verdict {
+  return SEVERITY[a.verdict] >= SEVERITY[b.verdict] ? a : b;
+}
+
+async function judgeVia(model: string, prompt: string, direct: boolean) {
+  const { object } = await generateObject({
+    model: direct ? directOpenAI(model) : model,
+    schema: verdictSchema,
+    system: MODERATION_SYSTEM_PROMPT,
+    prompt,
+  });
+  return object;
+}
+
+/** Judge A: Claude via gateway (primary), falling back to the reliable
+ * direct-OpenAI path if the gateway call fails, before finally giving up to
+ * a `flag`. */
+async function judgeA(prompt: string): Promise<{ verdict: Verdict; latencyMs: number; modelUsed: string }> {
   const start = Date.now();
   try {
-    const { object } = await generateObject({
-      model: useDirectOpenAI ? directOpenAI(model) : model,
-      schema: verdictSchema,
-      system: MODERATION_SYSTEM_PROMPT,
-      prompt,
-    });
-    return { verdict: object, latencyMs: Date.now() - start };
-  } catch {
+    const verdict = await judgeVia("anthropic/claude-haiku-4.5", prompt, false);
+    return { verdict, latencyMs: Date.now() - start, modelUsed: "anthropic/claude-haiku-4.5" };
+  } catch (primaryErr) {
+    if (hasDirectOpenAI) {
+      try {
+        const verdict = await judgeVia("gpt-4o-mini", prompt, true);
+        return { verdict, latencyMs: Date.now() - start, modelUsed: "anthropic/claude-haiku-4.5 (failed, fell back to openai/gpt-4o-mini direct)" };
+      } catch {
+        // fall through to the flag default below
+      }
+    }
     return {
-      verdict: { verdict: "flag", reason: "Judge unavailable; defaulting to flag.", category: "other_policy" },
+      verdict: { verdict: "flag", reason: `Judge unavailable (${primaryErr instanceof Error ? primaryErr.message.slice(0, 80) : "error"}); defaulting to flag.`, category: "other_policy" },
       latencyMs: Date.now() - start,
+      modelUsed: "anthropic/claude-haiku-4.5",
+    };
+  }
+}
+
+/** Judge B: direct OpenAI with the user's own key (primary) -- a separate
+ * network path and billing account from the gateway, so it doesn't share
+ * judge A's rate limit. Falls back to the gateway if no key is configured. */
+async function judgeB(prompt: string): Promise<{ verdict: Verdict; latencyMs: number; modelUsed: string }> {
+  const start = Date.now();
+  if (hasDirectOpenAI) {
+    try {
+      const verdict = await judgeVia("gpt-4o-mini", prompt, true);
+      return { verdict, latencyMs: Date.now() - start, modelUsed: "openai/gpt-4o-mini (direct, BYOK)" };
+    } catch (err) {
+      return {
+        verdict: { verdict: "flag", reason: `Direct OpenAI judge failed (${err instanceof Error ? err.message.slice(0, 80) : "error"}); defaulting to flag.`, category: "other_policy" },
+        latencyMs: Date.now() - start,
+        modelUsed: "openai/gpt-4o-mini (direct, BYOK)",
+      };
+    }
+  }
+  try {
+    const verdict = await judgeVia("openai/gpt-4o-mini", prompt, false);
+    return { verdict, latencyMs: Date.now() - start, modelUsed: "openai/gpt-4o-mini (gateway, no BYOK configured)" };
+  } catch (err) {
+    return {
+      verdict: { verdict: "flag", reason: `Judge unavailable (${err instanceof Error ? err.message.slice(0, 80) : "error"}); defaulting to flag.`, category: "other_policy" },
+      latencyMs: Date.now() - start,
+      modelUsed: "openai/gpt-4o-mini (gateway)",
     };
   }
 }
@@ -48,14 +108,9 @@ async function judge(model: string, prompt: string, useDirectOpenAI: boolean): P
 export async function runCouncil(prompt: string): Promise<CouncilResult> {
   const entries: CouncilEntry[] = [];
 
-  const [a, b] = await Promise.all([
-    judge("anthropic/claude-haiku-4.5", prompt, false),
-    process.env.OPENAI_API_KEY
-      ? judge("gpt-4o-mini", prompt, true)
-      : judge("openai/gpt-4o-mini", prompt, false), // fall back to gateway if no BYOK
-  ]);
-  entries.push({ stage: "council_judge_a", verdict: a.verdict, modelUsed: "anthropic/claude-haiku-4.5", latencyMs: a.latencyMs });
-  entries.push({ stage: "council_judge_b", verdict: b.verdict, modelUsed: process.env.OPENAI_API_KEY ? "openai/gpt-4o-mini (direct, BYOK)" : "openai/gpt-4o-mini (gateway)", latencyMs: b.latencyMs });
+  const [a, b] = await Promise.all([judgeA(prompt), judgeB(prompt)]);
+  entries.push({ stage: "council_judge_a", verdict: a.verdict, modelUsed: a.modelUsed, latencyMs: a.latencyMs });
+  entries.push({ stage: "council_judge_b", verdict: b.verdict, modelUsed: b.modelUsed, latencyMs: b.latencyMs });
 
   if (a.verdict.verdict === b.verdict.verdict) {
     return { finalVerdict: a.verdict, entries };
@@ -70,15 +125,26 @@ Reviewer A verdict: ${a.verdict.verdict} (${a.verdict.category}) — ${a.verdict
 Reviewer B verdict: ${b.verdict.verdict} (${b.verdict.category}) — ${b.verdict.reason}
 
 Cast the deciding vote.`;
-  const { object: chairmanVerdict } = await generateObject({
-    model: "anthropic/claude-sonnet-5",
-    schema: verdictSchema,
-    system: MODERATION_SYSTEM_PROMPT,
-    prompt: chairmanPrompt,
-  }).catch(() => ({
-    object: { verdict: "flag" as const, reason: "Chairman unavailable; defaulting to the stricter of the two verdicts.", category: "other_policy" as const },
-  }));
-  entries.push({ stage: "chairman", verdict: chairmanVerdict, modelUsed: "anthropic/claude-sonnet-5", latencyMs: Date.now() - start });
+
+  let chairmanVerdict: Verdict;
+  let chairmanModel = "anthropic/claude-sonnet-5";
+  try {
+    chairmanVerdict = await judgeVia(chairmanModel, chairmanPrompt, false);
+  } catch {
+    if (hasDirectOpenAI) {
+      try {
+        chairmanModel = "openai/gpt-4o-mini (direct, chairman fallback)";
+        chairmanVerdict = await judgeVia("gpt-4o-mini", chairmanPrompt, true);
+      } catch {
+        chairmanVerdict = stricterOf(a.verdict, b.verdict);
+        chairmanModel = "none (both chairman attempts failed; used stricter-of-two)";
+      }
+    } else {
+      chairmanVerdict = stricterOf(a.verdict, b.verdict);
+      chairmanModel = "none (chairman failed; used stricter-of-two)";
+    }
+  }
+  entries.push({ stage: "chairman", verdict: chairmanVerdict, modelUsed: chairmanModel, latencyMs: Date.now() - start });
 
   return { finalVerdict: chairmanVerdict, entries };
 }

@@ -45,8 +45,16 @@ export const VIDEO_MODELS: VideoModel[] = [
 
 export const IMAGE_MODELS: ImageModel[] = [
   { id: "gpt-image", label: "GPT Image", provider: "OpenAI", badge: "Premium", credits: 2, approxTime: "~10s", live: true, gatewayModelId: "openai/gpt-image-1" },
-  { id: "nano-banana-2", label: "Nano Banana 2", provider: "Google", badge: "New", credits: 1, approxTime: "~8s", live: true, gatewayModelId: "google/gemini-3.1-flash-image" },
-  { id: "nano-banana-2-4k", label: "Nano Banana 2 4K", provider: "Google", badge: "4K", credits: 2, approxTime: "~15s", live: true, gatewayModelId: "google/gemini-3.1-flash-image" },
+  // Gemini's "flash-image" models are chat models with image-output
+  // capability (image comes back as part of a generateText response, not
+  // through a dedicated image-generation endpoint) -- confirmed by testing
+  // (scripts/test-pipeline.mjs), not assumed: generateImage() rejects them
+  // with "is a language model, not an image model." Building that separate
+  // extraction path was out of scope for the time available, so these stay
+  // in the same honest preview-mode path as Sora/Runway rather than a half
+  // -working integration.
+  { id: "nano-banana-2", label: "Nano Banana 2", provider: "Google", badge: "New", credits: 1, approxTime: "~8s", live: false },
+  { id: "nano-banana-2-4k", label: "Nano Banana 2 4K", provider: "Google", badge: "4K", credits: 2, approxTime: "~15s", live: false },
   { id: "gen4-image", label: "Gen-4 Image", provider: "Runway", badge: "New", credits: 1, approxTime: "~20s", live: false },
 ];
 
