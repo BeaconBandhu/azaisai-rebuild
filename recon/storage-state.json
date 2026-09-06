@@ -1,0 +1,115 @@
+{
+  "cookies": [
+    {
+      "name": "NEXT_LOCALE",
+      "value": "en",
+      "domain": "www.azaisai.com",
+      "path": "/",
+      "expires": 1820268418.519582,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.1289607230.1788732419",
+      "domain": ".azaisai.com",
+      "path": "/",
+      "expires": 1823292463.461167,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ttp",
+      "value": "3IyMaUCMemh2CXYaNZCaYC1Xuhu.1788732418871",
+      "domain": ".tiktok.com",
+      "path": "/",
+      "expires": 1822428463.784768,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_tt_enable_cookie",
+      "value": "1",
+      "domain": ".azaisai.com",
+      "path": "/",
+      "expires": 1822428463,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ttp",
+      "value": "01M1WC5B3S3WSD1T1990FPGXXB_.tt.1.1788732419193",
+      "domain": ".azaisai.com",
+      "path": "/",
+      "expires": 1822428463,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_VBC40RQMX8",
+      "value": "GS2.1.s1788732418$o1$g1$t1788732463$j15$l0$h0",
+      "domain": ".azaisai.com",
+      "path": "/",
+      "expires": 1823292463.460928,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ttcsid",
+      "value": "1788732419197::OVgaa0kCBWWuAqE__Dbp.1.1788732463992.0::1.43416.44531::0.0.0.0::0.0.0",
+      "domain": ".azaisai.com",
+      "path": "/",
+      "expires": 1822428463,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ttcsid_D6MOCPJC77U4L3UM35J0",
+      "value": "1788732419196::jKhXfnMh7aD80f35CRGF.1.1788732463992.1",
+      "domain": ".azaisai.com",
+      "path": "/",
+      "expires": 1822428463,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ttcsid_D6P9DPJC77U77M85COOG",
+      "value": "1788732419197::MMct3c2jVVhrjgv96MCR.1.1788732463992.1",
+      "domain": ".azaisai.com",
+      "path": "/",
+      "expires": 1822428463,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ttcsid_D6O4A43C77U23TVTCNF0",
+      "value": "1788732419253::E66cP_THok_cMRuFKbVQ.1.1788732463992.1",
+      "domain": ".azaisai.com",
+      "path": "/",
+      "expires": 1822428463,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://challenges.cloudflare.com",
+      "localStorage": [
+        {
+          "name": "cf.turnstile.u",
+          "value": "sVCz15Wee_H9D5QShXu3_yCKfTqpN1MQ.r1QyCLIVU0-1788732418-1.3.1.1-5xTRH6dFj4.bR0Y_XJOxE1tU1jkTjoOTPKmaWUBZUXsKgPTDfaG54jIWGvvxdUF4IMqMINrJQthjUZTCKQlPig"
+        }
+      ]
+    }
+  ]
+}
