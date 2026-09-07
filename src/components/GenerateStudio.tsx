@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import {
   VIDEO_MODELS,
   IMAGE_MODELS,
@@ -15,7 +16,7 @@ import {
 } from "@/lib/models-catalog";
 import TrustChip from "./TrustChip";
 
-type Props = { type: "video" } | { type: "image" };
+type Props = { type: "video" | "image"; balance: number };
 
 interface GenerateResponse {
   id: string;
@@ -33,7 +34,54 @@ const BADGE_STYLES: Record<string, string> = {
   "4K": "bg-pink-500/15 text-pink-300",
 };
 
-export default function GenerateStudio({ type }: Props) {
+const EXAMPLES = [
+  "/generated/gallery-1.png",
+  "/generated/gallery-2.png",
+  "/generated/gallery-3.png",
+  "/generated/gallery-4.png",
+];
+
+function providerGlyph(provider: string): string {
+  if (provider === "Runway") return "R";
+  if (provider === "Google" || provider === "Veo") return "G";
+  return "◉"; // Sora / OpenAI
+}
+
+function GearIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function SettingRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="mt-4 border-t border-border/60 pt-4">
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted">{label}</p>
+      <div className="flex flex-wrap gap-2">{children}</div>
+    </div>
+  );
+}
+
+function Choice({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-md border px-3 py-1.5 text-xs transition ${
+        active
+          ? "border-accent bg-accent/10 text-accent"
+          : "border-border text-muted hover:border-border/60 hover:text-foreground"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default function GenerateStudio({ type, balance }: Props) {
   const models = (type === "video" ? VIDEO_MODELS : IMAGE_MODELS) as (VideoModel | ImageModel)[];
   // Default to a live model when one exists, so a first-time generation
   // returns real output instead of landing on a preview-mode model by
@@ -47,8 +95,8 @@ export default function GenerateStudio({ type }: Props) {
   const [style, setStyle] = useState<string>(IMAGE_STYLES[0]);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<GenerateResponse | null>(null);
-  const [showExample, setShowExample] = useState(true);
 
+  const activeModel = models.find((m) => m.id === modelId);
   const cost = type === "video" ? videoCost(modelId, duration) : imageCost(modelId);
 
   async function handleGenerate() {
@@ -70,7 +118,6 @@ export default function GenerateStudio({ type }: Props) {
       });
       const data = (await res.json()) as GenerateResponse;
       setResult(data);
-      setShowExample(false);
     } catch {
       setResult({ id: "", status: "failed", reason: "Network error." });
     } finally {
@@ -79,156 +126,205 @@ export default function GenerateStudio({ type }: Props) {
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row lg:px-8">
-      {/* Controls */}
-      <div className="w-full shrink-0 lg:w-80">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">{type === "video" ? "Video Studio" : "Image Studio"}</h1>
-          <span className="text-xs uppercase tracking-wide text-muted">{type === "video" ? "Text → Video" : "Text → Image"}</span>
-        </div>
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="grid overflow-hidden rounded-2xl border border-border bg-surface lg:grid-cols-[300px_minmax(0,1fr)]">
+        {/* Sidebar */}
+        <aside className="border-b border-border p-5 lg:border-b-0 lg:border-r">
+          <h1 className="px-1 text-base font-semibold tracking-tight">
+            {type === "video" ? "Video Studio" : "Image Studio"}
+          </h1>
 
-        <div className="mt-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Model</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {models.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setModelId(m.id)}
-                className={`rounded-lg border p-2.5 text-left transition ${
-                  modelId === m.id ? "border-accent bg-accent/10" : "border-border bg-surface hover:border-border/60"
-                } ${!m.live ? "opacity-70" : ""}`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium">{m.label}</span>
-                  {m.badge && (
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${BADGE_STYLES[m.badge]}`}>{m.badge}</span>
-                  )}
-                </div>
-                <div className="mt-1 flex items-center gap-1 text-[11px] text-muted">
-                  {"creditsPerSecond" in m ? `${m.creditsPerSecond.toFixed(1)} cr/s` : `${m.credits} cr`} · {m.approxTime}
-                </div>
-                {!m.live && (
-                  <span className="mt-1 inline-block rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold text-warning">
-                    PREVIEW MODE
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="mt-4 grid grid-cols-2 gap-1 rounded-lg bg-surface-2 p-1 text-xs">
+            <Link
+              href="/generate/video"
+              className={`rounded-md py-2 text-center font-medium transition ${
+                type === "video" ? "bg-border/70 text-foreground" : "text-muted hover:text-foreground"
+              }`}
+            >
+              Text → Video
+            </Link>
+            <Link
+              href="/generate/image"
+              className={`rounded-md py-2 text-center font-medium transition ${
+                type === "image" ? "bg-border/70 text-foreground" : "text-muted hover:text-foreground"
+              }`}
+            >
+              Text → Image
+            </Link>
           </div>
-        </div>
 
-        {!models.find((m) => m.id === modelId)?.live && (
-          <div className="mt-3 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
-            <strong>Preview mode:</strong> this model isn&apos;t reachable through Vercel AI Gateway in this
-            environment, so generating returns a labeled placeholder, not a real result. The guardrails and
-            credits pipeline still runs for real — pick a model without this badge for actual output.
-          </div>
-        )}
-
-        <div className="mt-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted">Describe your {type}</p>
-          </div>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={4}
-            placeholder={type === "video" ? "A neon-lit city drone shot with slow cinematic movement..." : "A majestic mountain landscape at golden hour..."}
-            className="mt-2 w-full rounded-lg border border-border bg-surface-2 p-3 text-sm outline-none ring-accent focus:ring-2"
-          />
-        </div>
-
-        <div className="mt-5 space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Settings</p>
-          <div>
-            <p className="mb-1.5 text-xs text-muted">Aspect ratio</p>
-            <div className="flex flex-wrap gap-2">
-              {(type === "video" ? ASPECT_RATIOS_VIDEO : ASPECT_RATIOS_IMAGE).map((ar) => (
+          <p className="mt-6 px-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted">Model</p>
+          <div className="mt-2 grid gap-1.5">
+            {models.map((m) => {
+              const active = modelId === m.id;
+              return (
                 <button
-                  key={ar}
-                  onClick={() => setAspectRatio(ar)}
-                  className={`rounded-md border px-2.5 py-1 text-xs ${aspectRatio === ar ? "border-accent bg-accent/10 text-accent" : "border-border text-muted"}`}
+                  key={m.id}
+                  type="button"
+                  onClick={() => setModelId(m.id)}
+                  className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left transition ${
+                    active ? "border-border bg-surface-2" : "border-transparent hover:bg-surface-2/60"
+                  } ${!m.live ? "opacity-80" : ""}`}
                 >
-                  {ar}
+                  <span className="grid h-6 w-6 flex-none place-items-center rounded-md bg-surface-2 text-[11px] font-bold text-muted">
+                    {providerGlyph(m.provider)}
+                  </span>
+                  <span className="grid min-w-0 gap-0.5">
+                    <span className="truncate text-xs font-medium">{m.label}</span>
+                    <span className="text-[10px] text-muted">
+                      {"creditsPerSecond" in m ? `${m.creditsPerSecond.toFixed(1)} cr/s` : `${m.credits} cr`} · {m.approxTime}
+                    </span>
+                  </span>
+                  {!m.live ? (
+                    <span className="ml-auto flex-none rounded bg-warning/15 px-1.5 py-0.5 text-[9px] font-semibold text-warning">
+                      PREVIEW
+                    </span>
+                  ) : m.badge ? (
+                    <span className={`ml-auto flex-none rounded px-1.5 py-0.5 text-[9px] font-semibold ${BADGE_STYLES[m.badge]}`}>
+                      {m.badge}
+                    </span>
+                  ) : null}
                 </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* Main */}
+        <section className="p-5 sm:p-7">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted">AI Creator</p>
+              <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+                {type === "video" ? "Video Studio" : "Text to Image"}
+              </h2>
+            </div>
+            <span className="flex flex-none items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs text-muted">
+              ⚡ {balance} credits
+            </span>
+          </div>
+
+          {!activeModel?.live && (
+            <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
+              <strong>Preview mode:</strong> this model isn&apos;t reachable through Vercel AI Gateway in this
+              environment, so generating returns a labeled placeholder, not a real result. The guardrails and
+              credits pipeline still runs for real — pick a model without this badge for actual output.
+            </div>
+          )}
+
+          {/* Prompt */}
+          <div className="mt-4 rounded-xl border border-border bg-surface-2">
+            <label htmlFor="prompt" className="block px-4 pt-3 text-[11px] text-muted">
+              Describe your {type}
+            </label>
+            <textarea
+              id="prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              maxLength={2000}
+              rows={4}
+              placeholder={
+                type === "video"
+                  ? "A cinematic drone shot flying through a futuristic city at night, rain, neon reflections, dramatic lighting..."
+                  : "A cinematic portrait of a woman in a futuristic city at night, neon reflections, volumetric light..."
+              }
+              className="w-full resize-y bg-transparent px-4 py-2 text-sm outline-none placeholder:text-muted/50"
+            />
+            <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[10px] text-muted">
+              <span>Be specific — name the subject, setting, and mood.</span>
+              <span>{prompt.length}/2000</span>
+            </div>
+          </div>
+
+          {/* Settings */}
+          <div className="mt-3 rounded-xl border border-border p-4">
+            <p className="flex items-center gap-2 text-xs font-semibold">
+              <GearIcon /> {type === "video" ? "Settings" : "Style & Settings"}
+            </p>
+
+            {type === "image" && (
+              <SettingRow label="Style">
+                {IMAGE_STYLES.map((s) => (
+                  <Choice key={s} active={style === s} onClick={() => setStyle(s)}>
+                    {s}
+                  </Choice>
+                ))}
+              </SettingRow>
+            )}
+
+            <SettingRow label="Aspect ratio">
+              {(type === "video" ? ASPECT_RATIOS_VIDEO : ASPECT_RATIOS_IMAGE).map((ar) => (
+                <Choice key={ar} active={aspectRatio === ar} onClick={() => setAspectRatio(ar)}>
+                  {ar}
+                </Choice>
+              ))}
+            </SettingRow>
+
+            {type === "video" && (
+              <SettingRow label="Duration">
+                {DURATIONS.map((d) => (
+                  <Choice key={d} active={duration === d} onClick={() => setDuration(d)}>
+                    {d}s
+                  </Choice>
+                ))}
+              </SettingRow>
+            )}
+          </div>
+
+          {/* Generate bar */}
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <div className="text-xs">
+              <p className="text-muted">Estimated cost</p>
+              <p className="mt-0.5 font-semibold">{cost} credits</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={submitting || !prompt.trim()}
+              className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-hover disabled:opacity-50"
+            >
+              {submitting ? "Generating…" : `Generate ${type}`}
+            </button>
+          </div>
+
+          {/* Result */}
+          <div className="mt-5 overflow-hidden rounded-xl border border-border bg-surface-2">
+            {result ? (
+              <ResultPanel result={result} type={type} />
+            ) : (
+              <div className="flex min-h-[280px] flex-col items-center justify-center gap-1 p-8 text-center text-sm text-muted">
+                <span>Your {type} will appear here</span>
+                <span className="text-xs text-muted/60">Every generation is screened by the guardrails council first.</span>
+              </div>
+            )}
+          </div>
+
+          {/* Examples */}
+          <div className="mt-6">
+            <div className="flex items-center justify-between text-xs text-muted">
+              <span>Example generations</span>
+              <Link href="/history" className="hover:text-foreground">
+                View all →
+              </Link>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {EXAMPLES.map((src) => (
+                <div key={src} className="group relative overflow-hidden rounded-lg border border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt="Example generation"
+                    loading="lazy"
+                    className="aspect-[16/10] w-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                  <span className="absolute bottom-1.5 left-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[9px] text-white backdrop-blur">
+                    {type === "video" ? `${duration}s · ${aspectRatio}` : `AI output · ${aspectRatio}`}
+                  </span>
+                </div>
               ))}
             </div>
           </div>
-
-          {type === "video" && (
-            <div>
-              <p className="mb-1.5 text-xs text-muted">Duration</p>
-              <div className="flex gap-2">
-                {DURATIONS.map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDuration(d)}
-                    className={`rounded-md border px-2.5 py-1 text-xs ${duration === d ? "border-accent bg-accent/10 text-accent" : "border-border text-muted"}`}
-                  >
-                    {d}s
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {type === "image" && (
-            <div>
-              <p className="mb-1.5 text-xs text-muted">Style</p>
-              <div className="flex flex-wrap gap-2">
-                {IMAGE_STYLES.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setStyle(s)}
-                    className={`rounded-md border px-2.5 py-1 text-xs ${style === s ? "border-accent bg-accent/10 text-accent" : "border-border text-muted"}`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-5 flex items-center justify-between text-sm">
-          <span className="text-muted">Estimated cost</span>
-          <span className="rounded-md border border-border bg-surface px-2 py-1 text-xs">⚡ {cost} credits</span>
-        </div>
-
-        <button
-          onClick={handleGenerate}
-          disabled={submitting || !prompt.trim()}
-          className="mt-4 w-full rounded-md bg-accent py-2.5 text-sm font-medium text-white transition hover:bg-accent-hover disabled:opacity-50"
-        >
-          {submitting ? "Generating..." : `Generate ${type}`}
-        </button>
-      </div>
-
-      {/* Preview */}
-      <div className="min-h-[420px] flex-1 rounded-2xl border border-border bg-surface">
-        {result ? (
-          <ResultPanel result={result} type={type} />
-        ) : showExample ? (
-          <div className="relative flex h-full min-h-[420px] items-center justify-center overflow-hidden rounded-2xl">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={type === "video" ? "/generated/studio-example-video.png" : "/generated/studio-example-image.png"}
-              alt="Example generation"
-              className="h-full max-h-[500px] w-full rounded-2xl object-cover"
-            />
-            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/70 to-transparent p-4">
-              <span className="text-xs font-medium text-white/80">EXAMPLE</span>
-              <button onClick={() => setShowExample(false)} className="rounded-full bg-black/40 px-3 py-1 text-xs text-white hover:bg-black/60">
-                Hide example
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-2 text-sm text-muted">
-            <span>Your creation will appear here</span>
-            <button onClick={() => setShowExample(true)} className="text-accent hover:underline">Show example</button>
-          </div>
-        )}
+        </section>
       </div>
     </div>
   );
@@ -237,7 +333,7 @@ export default function GenerateStudio({ type }: Props) {
 function ResultPanel({ result, type }: { result: GenerateResponse; type: "video" | "image" }) {
   if (result.status === "blocked") {
     return (
-      <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-3 p-8 text-center">
+      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 p-8 text-center">
         <TrustChip status="blocked" />
         <p className="max-w-sm text-sm text-muted">{result.reason}</p>
       </div>
@@ -245,7 +341,7 @@ function ResultPanel({ result, type }: { result: GenerateResponse; type: "video"
   }
   if (result.status === "failed") {
     return (
-      <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-3 p-8 text-center">
+      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 p-8 text-center">
         <TrustChip status="failed" />
         <p className="max-w-sm text-sm text-muted">{result.reason}</p>
       </div>
@@ -253,7 +349,7 @@ function ResultPanel({ result, type }: { result: GenerateResponse; type: "video"
   }
   if (result.isPreviewMode) {
     return (
-      <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-3 p-8 text-center">
+      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 p-8 text-center">
         <TrustChip status="passed" />
         <span className="rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs font-medium text-warning">
           Preview mode
@@ -267,8 +363,10 @@ function ResultPanel({ result, type }: { result: GenerateResponse; type: "video"
     );
   }
   return (
-    <div className="relative flex h-full min-h-[420px] flex-col items-center justify-center gap-3 p-4">
-      <div className="absolute right-4 top-4"><TrustChip status="passed" /></div>
+    <div className="relative flex min-h-[300px] flex-col items-center justify-center gap-3 p-4">
+      <div className="absolute right-4 top-4">
+        <TrustChip status="passed" />
+      </div>
       {type === "image" ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={result.outputUrl ?? ""} alt="Generated result" className="max-h-[500px] rounded-lg object-contain" />
