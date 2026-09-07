@@ -180,9 +180,26 @@ export default function HomePage() {
 
       <GalleryShowcase />
 
+      {/* Trust + CTA over a background video */}
+      <div className="relative isolate overflow-hidden">
+        <video
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+          src="/cta-bg.webm"
+          poster="/generated/gallery-3.png"
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden="true"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-background/70 to-background"
+        />
+
       {/* Guardrails callout — the prominent, better-than-original addition */}
       <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-accent/30 bg-accent/5 p-8 sm:p-10">
+        <div className="rounded-2xl border border-accent/30 bg-accent/10 p-8 sm:p-10 backdrop-blur-md">
           <p className="text-xs font-semibold uppercase tracking-widest text-accent">Built-in trust &amp; safety</p>
           <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">Every generation is checked, not just charged</h2>
           <p className="mt-3 max-w-2xl text-muted">
@@ -212,6 +229,7 @@ export default function HomePage() {
         </div>
         <p className="mt-4 text-xs text-muted">Most results ready in under a minute.</p>
       </section>
+      </div>
     </div>
   );
 }
