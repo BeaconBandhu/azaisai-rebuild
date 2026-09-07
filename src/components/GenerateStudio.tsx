@@ -35,7 +35,12 @@ const BADGE_STYLES: Record<string, string> = {
 
 export default function GenerateStudio({ type }: Props) {
   const models = (type === "video" ? VIDEO_MODELS : IMAGE_MODELS) as (VideoModel | ImageModel)[];
-  const [modelId, setModelId] = useState(models[0].id);
+  // Default to a live model when one exists, so a first-time generation
+  // returns real output instead of landing on a preview-mode model by
+  // accident (found by testing: sora-standard was models[0] and not live,
+  // so every new user's very first generation looked "broken").
+  const defaultModel = models.find((m) => m.live) ?? models[0];
+  const [modelId, setModelId] = useState(defaultModel.id);
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState<string>(type === "video" ? ASPECT_RATIOS_VIDEO[0] : ASPECT_RATIOS_IMAGE[0]);
   const [duration, setDuration] = useState<number>(DURATIONS[0]);
@@ -99,14 +104,26 @@ export default function GenerateStudio({ type }: Props) {
                     <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${BADGE_STYLES[m.badge]}`}>{m.badge}</span>
                   )}
                 </div>
-                <div className="mt-1 text-[11px] text-muted">
+                <div className="mt-1 flex items-center gap-1 text-[11px] text-muted">
                   {"creditsPerSecond" in m ? `${m.creditsPerSecond.toFixed(1)} cr/s` : `${m.credits} cr`} · {m.approxTime}
-                  {!m.live && " · Preview"}
                 </div>
+                {!m.live && (
+                  <span className="mt-1 inline-block rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold text-warning">
+                    PREVIEW MODE
+                  </span>
+                )}
               </button>
             ))}
           </div>
         </div>
+
+        {!models.find((m) => m.id === modelId)?.live && (
+          <div className="mt-3 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
+            <strong>Preview mode:</strong> this model isn&apos;t reachable through Vercel AI Gateway in this
+            environment, so generating returns a labeled placeholder, not a real result. The guardrails and
+            credits pipeline still runs for real — pick a model without this badge for actual output.
+          </div>
+        )}
 
         <div className="mt-5">
           <div className="flex items-center justify-between">
