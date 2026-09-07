@@ -11,7 +11,7 @@ const STEPS = [
 
 const TRIAL_POINTS = [
   "8 free credits, no card required",
-  "Live Veo 3 video + GPT Image generation",
+  "Live image generation via GPT Image",
   "Every prompt screened by the guardrails council",
   "One free allowance per account",
 ];
@@ -125,7 +125,7 @@ export default function HomePage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-accent">Free AI Credits</p>
             <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Create anything. Start free.</h2>
             <p className="mt-3 max-w-md text-muted">
-              8 free credits to generate AI video and images — Veo 3, GPT Image, and more. No credit card, no commitment.
+              8 free credits to generate AI videos and images with GPT Image, Veo, and more. No credit card, no commitment.
             </p>
             <Link
               href="/sign-up"
