@@ -94,7 +94,7 @@ export const TIERS: Tier[] = [
     id: "starter",
     label: "Starter",
     tagline: "Core",
-    priceMonthly: 16.9,
+    priceMonthly: 6.9,
     creditsPerMonth: 60,
     features: ["60 credits / month", "Priority video + image queue", "Standard support"],
     stripePriceEnv: "STRIPE_PRICE_STARTER",
@@ -103,7 +103,7 @@ export const TIERS: Tier[] = [
     id: "pro",
     label: "Pro",
     tagline: "Popular",
-    priceMonthly: 32.9,
+    priceMonthly: 22.9,
     creditsPerMonth: 180,
     features: ["180 credits / month", "Priority rendering", "Dedicated support"],
     popular: true,
@@ -113,7 +113,7 @@ export const TIERS: Tier[] = [
     id: "business",
     label: "Business",
     tagline: "Power",
-    priceMonthly: 65.9,
+    priceMonthly: 55.9,
     creditsPerMonth: 420,
     features: ["420 credits / month", "Priority video + image queue", "Commercial license"],
     stripePriceEnv: "STRIPE_PRICE_BUSINESS",
@@ -129,9 +129,9 @@ export interface TopUp {
 }
 
 export const TOP_UPS: TopUp[] = [
-  { id: "starter-pack", label: "Starter Pack", price: 37.9, credits: 100, stripePriceEnv: "STRIPE_PRICE_TOPUP_100" },
-  { id: "value-pack", label: "Value Pack", price: 53.9, credits: 200, stripePriceEnv: "STRIPE_PRICE_TOPUP_200" },
-  { id: "pro-pack", label: "Pro Pack", price: 62.9, credits: 300, stripePriceEnv: "STRIPE_PRICE_TOPUP_300" },
+  { id: "starter-pack", label: "Starter Pack", price: 27.9, credits: 100, stripePriceEnv: "STRIPE_PRICE_TOPUP_100" },
+  { id: "value-pack", label: "Value Pack", price: 43.9, credits: 200, stripePriceEnv: "STRIPE_PRICE_TOPUP_200" },
+  { id: "pro-pack", label: "Pro Pack", price: 52.9, credits: 300, stripePriceEnv: "STRIPE_PRICE_TOPUP_300" },
 ];
 
 /** Free credits granted immediately on verified email signup — no phone-OTP
