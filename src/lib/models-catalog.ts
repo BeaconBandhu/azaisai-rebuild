@@ -36,8 +36,13 @@ export const VIDEO_MODELS: VideoModel[] = [
   { id: "sora-standard", label: "Sora Standard", provider: "Sora", badge: "Popular", creditsPerSecond: 1.0, approxTime: "~2m", live: false },
   { id: "sora-pro", label: "Sora Pro", provider: "Sora", badge: "Premium", creditsPerSecond: 2.0, approxTime: "~3m", live: false },
   { id: "veo-2", label: "Veo 2", provider: "Veo", creditsPerSecond: 3.0, approxTime: "~45s", live: false },
-  { id: "veo-3-fast", label: "Veo 3 Fast", provider: "Veo", badge: "Fast", creditsPerSecond: 1.5, approxTime: "~35s", live: true, gatewayModelId: "google/veo-3.1-fast-generate-001" },
-  { id: "veo-3", label: "Veo 3", provider: "Veo", badge: "New", creditsPerSecond: 3.0, approxTime: "~1m", live: true, gatewayModelId: "google/veo-3.1-generate-001" },
+  // Verified working at the code/API level (real request, real structured
+  // response) via scripts/debug-test-video.mjs -- blocked by this Vercel
+  // account's AI Gateway requiring a $10+ balance for video generation,
+  // which it doesn't have. A real funding decision, not a code fix; flip
+  // these back to live: true the moment the account is topped up.
+  { id: "veo-3-fast", label: "Veo 3 Fast", provider: "Veo", badge: "Fast", creditsPerSecond: 1.5, approxTime: "~35s", live: false, gatewayModelId: "google/veo-3.1-fast-generate-001" },
+  { id: "veo-3", label: "Veo 3", provider: "Veo", badge: "New", creditsPerSecond: 3.0, approxTime: "~1m", live: false, gatewayModelId: "google/veo-3.1-generate-001" },
   { id: "gen4-turbo", label: "Gen-4 Turbo", provider: "Runway", badge: "Popular", creditsPerSecond: 1.0, approxTime: "~2m", live: false },
   { id: "gen4-5", label: "Gen-4.5", provider: "Runway", badge: "Premium", creditsPerSecond: 1.2, approxTime: "~2m", live: false },
   { id: "gen3-alpha-turbo", label: "Gen-3 Alpha Turbo", provider: "Runway", badge: "Fast", creditsPerSecond: 1.0, approxTime: "~1m", live: false },

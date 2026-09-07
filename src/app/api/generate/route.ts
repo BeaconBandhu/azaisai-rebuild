@@ -92,7 +92,17 @@ export async function POST(req: NextRequest) {
     await refundCredits(userId, cost, generationId);
     await sql`update generations set status = 'failed', guardrail_verdict = 'passed', guardrail_reason = ${failReason}, completed_at = now() where id = ${generationId}`;
     capture(userId, "generation_failed", { generationId, type, modelId, reason: failReason });
-    return NextResponse.json({ id: generationId, status: "failed", reason: "The model provider failed; credits were refunded." }, { status: 200 });
+    // Log the raw provider error server-side for debugging, but never show
+    // it to the user verbatim -- it can leak which underlying provider we
+    // call, support URLs for a service they never heard of, or internal
+    // request IDs. A content-policy rejection (e.g. a copyrighted character)
+    // gets its own clearer message; anything else gets a generic one.
+    console.error(`generation ${generationId} failed:`, failReason);
+    const isPolicyRejection = /safety system|content policy|rejected/i.test(failReason);
+    const userMessage = isPolicyRejection
+      ? "This prompt couldn't be generated — it may reference a copyrighted character or brand, or otherwise violate the model provider's content policy. Try rephrasing. Credits were refunded."
+      : "The model provider couldn't complete this generation right now. Credits were refunded — please try again.";
+    return NextResponse.json({ id: generationId, status: "failed", reason: userMessage }, { status: 200 });
   }
 
   await sql`update generations set status = 'completed', output_url = ${outputUrl}, guardrail_verdict = 'passed', completed_at = now() where id = ${generationId}`;
