@@ -1,4 +1,5 @@
 import Link from "next/link";
+import GalleryShowcase from "@/components/GalleryShowcase";
 
 const SHOWCASE_BRANDS = ["Sora", "Veo", "Runway", "GPT Image", "Nano Banana"];
 
@@ -55,6 +56,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <GalleryShowcase />
 
       {/* Guardrails callout — the prominent, better-than-original addition */}
       <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">

@@ -192,14 +192,25 @@ export default function GenerateStudio({ type }: Props) {
         {result ? (
           <ResultPanel result={result} type={type} />
         ) : showExample ? (
-          <div className="flex h-full min-h-[420px] items-center justify-center p-8 text-center text-sm text-muted">
-            <div>
-              <div className="mx-auto h-10 w-10 rounded-full border border-border" />
-              <p className="mt-3">Example preview — generate your own to replace it.</p>
+          <div className="relative flex h-full min-h-[420px] items-center justify-center overflow-hidden rounded-2xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={type === "video" ? "/generated/studio-example-video.png" : "/generated/studio-example-image.png"}
+              alt="Example generation"
+              className="h-full max-h-[500px] w-full rounded-2xl object-cover"
+            />
+            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/70 to-transparent p-4">
+              <span className="text-xs font-medium text-white/80">EXAMPLE</span>
+              <button onClick={() => setShowExample(false)} className="rounded-full bg-black/40 px-3 py-1 text-xs text-white hover:bg-black/60">
+                Hide example
+              </button>
             </div>
           </div>
         ) : (
-          <div className="flex h-full min-h-[420px] items-center justify-center text-sm text-muted">Your creation will appear here</div>
+          <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-2 text-sm text-muted">
+            <span>Your creation will appear here</span>
+            <button onClick={() => setShowExample(true)} className="text-accent hover:underline">Show example</button>
+          </div>
         )}
       </div>
     </div>
