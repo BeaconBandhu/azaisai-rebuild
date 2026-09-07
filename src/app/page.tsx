@@ -22,14 +22,6 @@ const MOSAIC = [
   { src: "/generated/gallery-2.png", label: "Golden hour", wide: false },
   { src: "/generated/gallery-3.png", label: "Neon city", wide: false },
   { src: "/generated/gallery-4.png", label: "Workshop", wide: false },
-  { src: "/generated/studio-example-video.png", label: "Motion, one prompt", wide: true },
-];
-
-const FLOAT_CARDS = [
-  { src: "/generated/gallery-1.png", pos: "left-[3%] top-[16%] -rotate-[9deg]" },
-  { src: "/generated/gallery-2.png", pos: "left-[8%] bottom-[8%] rotate-[6deg]" },
-  { src: "/generated/gallery-3.png", pos: "right-[4%] top-[14%] rotate-[9deg]" },
-  { src: "/generated/gallery-4.png", pos: "right-[9%] bottom-[6%] -rotate-[6deg]" },
 ];
 
 function ArrowRight() {
@@ -60,25 +52,24 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative isolate overflow-hidden px-4 pb-20 pt-24 sm:px-6 lg:px-8">
+      <section className="relative isolate flex min-h-[88vh] items-center overflow-hidden px-4 py-24 sm:px-6 lg:px-8">
+        <video
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+          src="/hero-bg.webm"
+          poster="/generated/gallery-2.png"
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden="true"
+        />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-24 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-accent/20 blur-[120px]"
+          className="absolute inset-0 -z-10 bg-gradient-to-b from-background/80 via-background/55 to-background"
         />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden opacity-40 lg:block">
-          {FLOAT_CARDS.map((c) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={c.src}
-              src={c.src}
-              alt=""
-              className={`absolute h-52 w-40 rounded-2xl border border-border object-cover shadow-2xl ${c.pos}`}
-            />
-          ))}
-        </div>
 
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted backdrop-blur">
             <Sparkle />
             AI Video &amp; Image Creation
           </span>
@@ -109,11 +100,6 @@ export default function HomePage() {
             {BRANDS.map((b) => (
               <span key={b} className="font-medium text-foreground/70">{b}</span>
             ))}
-          </div>
-
-          <div className="relative mx-auto mt-12 aspect-video max-w-3xl overflow-hidden rounded-2xl border border-border">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/generated/studio-example-video.png" alt="Example generation" className="h-full w-full object-cover" />
           </div>
         </div>
       </section>
