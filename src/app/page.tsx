@@ -7,41 +7,52 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="mx-auto max-w-5xl px-4 pb-16 pt-24 text-center sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">
-          Turn Ideas Into Reality
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-muted">
-          Create videos and visuals so captivating, your audience can&apos;t scroll past. One prompt is all it takes.
-        </p>
-        <div className="mt-8 flex justify-center gap-3">
-          <Link
-            href="/generate/video"
-            className="rounded-full bg-accent px-6 py-3 text-sm font-medium text-white transition hover:bg-accent-hover"
-          >
-            Get Started →
-          </Link>
-        </div>
-        <p className="mt-4 text-xs text-muted">8 free credits · No card required</p>
-      </section>
+      {/* Hero + 3-step, sharing one full-bleed video background */}
+      <div className="relative overflow-hidden">
+        <video
+          src="/Videos/bgvideo.webm"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-background/80" />
 
-      {/* 3-step */}
-      <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-10 sm:grid-cols-3">
-          {[
-            { n: "01", title: "Pick Your Model", body: "Choose the model that fits your project. Each has strengths — pick one and go." },
-            { n: "02", title: "Describe It", body: "Write what you want to see. A sentence is enough — the AI fills in the rest." },
-            { n: "03", title: "Download & Use", body: "Your video is ready in seconds. Download it, post it, use it however you want." },
-          ].map((s) => (
-            <div key={s.n} className="text-center">
-              <div className="text-4xl font-bold text-muted/40">{s.n}</div>
-              <h3 className="mt-3 font-semibold">{s.title}</h3>
-              <p className="mt-2 text-sm text-muted">{s.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <section className="relative mx-auto max-w-5xl px-4 pb-16 pt-24 text-center sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">
+            Turn Ideas Into Reality
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-lg text-muted">
+            Create videos and visuals so captivating, your audience can&apos;t scroll past. One prompt is all it takes.
+          </p>
+          <div className="mt-8 flex justify-center gap-3">
+            <Link
+              href="/generate/video"
+              className="rounded-full bg-accent px-6 py-3 text-sm font-medium text-white transition hover:bg-accent-hover"
+            >
+              Get Started →
+            </Link>
+          </div>
+          <p className="mt-4 text-xs text-muted">8 free credits · No card required</p>
+        </section>
+
+        <section className="relative mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid gap-10 sm:grid-cols-3">
+            {[
+              { n: "01", title: "Pick Your Model", body: "Choose the model that fits your project. Each has strengths — pick one and go." },
+              { n: "02", title: "Describe It", body: "Write what you want to see. A sentence is enough — the AI fills in the rest." },
+              { n: "03", title: "Download & Use", body: "Your video is ready in seconds. Download it, post it, use it however you want." },
+            ].map((s) => (
+              <div key={s.n} className="text-center">
+                <div className="text-4xl font-bold text-muted/40">{s.n}</div>
+                <h3 className="mt-3 font-semibold">{s.title}</h3>
+                <p className="mt-2 text-sm text-muted">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
 
       {/* Model showcase */}
       <section className="border-y border-border/80 bg-surface/40 py-14">
